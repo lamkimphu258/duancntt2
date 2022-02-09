@@ -7,6 +7,13 @@ import numpy as np
 
 import face_recognition
 
+from colorama import Fore
+from colorama import Style
+
+from tempfile import NamedTemporaryFile
+import shutil
+
+import mysql.connector
 
 def capture_user_face():
     image_name = input('Please enter your image name: ')
@@ -61,8 +68,9 @@ def print_authentication_menu():
 
 def print_app_menu():
     print('Please choose one option:')
-    print('1. Insert new course')
-    print('2. Show all courses')
+    print('0. Turn off smart device')
+    print('1. Turn on smart device')
+    print('2. Show all smart devices in my house')
     print('3. Exit')
 
 
@@ -75,7 +83,7 @@ if choice == 1:
     if password == 'password':
         capture_user_face()
     else:
-        print("You type wrong password")
+        print(f"{Fore.RED}You type wrong password{Style.RESET_ALL}")
 elif choice == 2:
     video_capture = cv2.VideoCapture(0)
 
@@ -119,26 +127,31 @@ elif choice == 2:
             cv2.destroyAllWindows()
             if True in matches:
                 while True:
+                    mydb = mysql.connector.connect(host='localhost',database='smart_devices',user='root',password='root')
+                    print()
                     print_app_menu()
                     app_choice = int(input('Your choice: '))
-                    coursesFileName = 'courses.csv'
-                    coursesFile = open(coursesFileName)
-                    csvReader = csv.reader(coursesFile)
+                    if app_choice == 0:
+                        smartDeviceId = input('Smart device id: ')
+                        mycursor = mydb.cursor()
+                        mycursor.execute('update home_smart_devices set status = "off" where id = ' + smartDeviceId)
+                        mydb.commit()
+                        print('Smart device id ' + smartDeviceId + ' is turned off')
                     if app_choice == 1:
-                        courseId = input('Course id: ')
-                        courseName = input('Course name: ')
-                        fields = [courseId, courseName]
-                        with open(coursesFileName, 'a') as f:
-                            writer = csv.writer(f)
-                            writer.writerow(fields)
-                    elif app_choice == 2:
-                        print()
-                        for row in csvReader:
-                            print(row[0] + "\t|" + row[1])
-                        print()
-                    elif app_choice == 3:
+                        smartDeviceId = input('Smart device id: ')
+                        mycursor = mydb.cursor()
+                        mycursor.execute('update home_smart_devices set status = "on" where id = ' + smartDeviceId)
+                        mydb.commit()
+                        print('Smart device id ' + smartDeviceId + ' is turned on')
+                    if app_choice == 2:
+                        mycursor = mydb.cursor()
+                        mycursor.execute("select * from home_smart_devices")
+                        myresult = mycursor.fetchall()
+                        for result in myresult:
+                            print(result)
+                    if app_choice == 3:
                         break
                 break
             elif False in matches:
-                print('You do not have permission to use this application')
+                print(f'{Fore.RED}You do not have permission to use this application{Style.RESET_ALL}')
                 break
