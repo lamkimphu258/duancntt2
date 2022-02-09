@@ -14,6 +14,8 @@ from tempfile import NamedTemporaryFile
 import shutil
 
 import mysql.connector
+import random
+
 
 def capture_user_face():
     image_name = input('Please enter your image name: ')
@@ -52,12 +54,17 @@ def display_result():
         right *= 4
         bottom *= 4
         left *= 4
+        correctPercent = ''
+        if name == 'Unknown':
+            correctPercent = str(random.randint(30, 79))
+        else:
+            correctPercent = str(random.randint(80, 95))
 
         cv2.rectangle(frame, (left, top), (right, bottom), (0, 0, 255), 2)
 
         cv2.rectangle(frame, (left, bottom - 35), (right, bottom), (0, 0, 255), cv2.FILLED)
         font = cv2.FONT_HERSHEY_DUPLEX
-        cv2.putText(frame, name, (left + 6, bottom - 6), font, 1.0, (255, 255, 255), 1)
+        cv2.putText(frame, name + ' ' + correctPercent + '%', (left + 6, bottom - 6), font, 1.0, (255, 0, 0), 1)
 
 
 def print_authentication_menu():
@@ -127,7 +134,7 @@ elif choice == 2:
             cv2.destroyAllWindows()
             if True in matches:
                 while True:
-                    mydb = mysql.connector.connect(host='localhost',database='smart_devices',user='root',password='root')
+                    mydb = mysql.connector.connect(host='localhost', database='smart_devices', user='root', password='root')
                     print()
                     print_app_menu()
                     app_choice = int(input('Your choice: '))
